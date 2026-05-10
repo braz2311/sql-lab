@@ -319,3 +319,32 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-ser
 .btn-lessons-open:hover { border-color: var(--yellow); color: var(--yellow); }
 .btn-lesson { margin-top: 12px; padding: 6px 14px; background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.2); color: var(--yellow); border-radius: 7px; font-size: 13px; cursor: pointer; }
 .btn-lesson:hover { background: rgba(251,191,36,.14); }
+
+/* ── Células clicáveis ───────────────────────────────────────── */
+.cell-clickable {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.cell-clickable:hover {
+  background: rgba(56,189,248,.15) !important;
+  color: var(--blue);
+}
+.th-clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+.th-clickable:hover {
+  background: rgba(56,189,248,.15);
+  color: var(--blue);
+}
+.th-hint {
+  opacity: 0.5;
+  font-size: 10px;
+  margin-left: 3px;
+}
+.result-footer-hint {
+  color: var(--blue);
+  font-size: 11px;
+  opacity: 0.7;
+}

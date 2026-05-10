@@ -27,6 +27,35 @@ export function AppShell() {
     editorInsertRef.current?.insert(col);
   };
 
+  // Clicar numa célula → adiciona WHERE coluna = 'valor' ao editor
+  const handleCellClick = (col: string, val: unknown) => {
+    const isNum = typeof val === 'number' || !isNaN(Number(val));
+    const clause = isNum
+      ? ` WHERE ${col} = ${val}`
+      : ` WHERE ${col} = '${val}'`;
+
+    setSql((prev) => {
+      const base = prev.trim().replace(/;$/, '');
+      // Se já tem WHERE, usa AND em vez de WHERE
+      if (/\bWHERE\b/i.test(base)) {
+        return base + ` AND ${col} = ${isNum ? val : `'${val}'`};`;
+      }
+      // Remove ORDER BY antes de adicionar WHERE
+      const withoutOrder = base.replace(/\s+ORDER BY.*/i, '');
+      const orderMatch = base.match(/(\s+ORDER BY.*)/i);
+      return withoutOrder + clause + (orderMatch ? orderMatch[1] : '') + ';';
+    });
+  };
+
+  // Clicar no header → ORDER BY coluna
+  const handleHeaderClick = (col: string) => {
+    setSql((prev) => {
+      const base = prev.trim().replace(/;$/, '');
+      const withoutOrder = base.replace(/\s+ORDER BY.*/i, '');
+      return withoutOrder + ` ORDER BY ${col};`;
+    });
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -45,7 +74,26 @@ export function AppShell() {
     );
   }
 
-  // Interview mode is full-panel (no editor)
+  const resultPanel = (
+    <div className="results-area">
+      {lastError && <div className="error-box" dangerouslySetInnerHTML={{ __html: lastError }} />}
+      {lastResult && !lastError && (
+        <ResultTable
+          columns={lastResult.columns}
+          values={lastResult.values}
+          timeMs={lastTimeMs}
+          onCellClick={handleCellClick}
+          onHeaderClick={handleHeaderClick}
+        />
+      )}
+      {!lastResult && !lastError && (
+        <div className="results-placeholder">
+          Escreve uma query e prime <kbd>Ctrl+Enter</kbd> para executar.
+        </div>
+      )}
+    </div>
+  );
+
   if (mode === 'interview') {
     return (
       <div className="app-shell">
@@ -56,13 +104,7 @@ export function AppShell() {
           </aside>
           <main className="panel-main">
             <SQLEditor value={sql} onChange={setSql} onInsert={handleInsertRef} />
-            <div className="results-area">
-              {lastError && <div className="error-box" dangerouslySetInnerHTML={{ __html: lastError }} />}
-              {lastResult && !lastError && <ResultTable columns={lastResult.columns} values={lastResult.values} timeMs={lastTimeMs} />}
-              {!lastResult && !lastError && (
-                <div className="results-placeholder">Escreve a query e prima <kbd>Ctrl+Enter</kbd>.</div>
-              )}
-            </div>
+            {resultPanel}
           </main>
           <aside className="panel-right">
             <InterviewMode />
@@ -80,28 +122,16 @@ export function AppShell() {
         <aside className="panel-schema">
           <SchemaPanel onColumnClick={handleColumnClick} />
         </aside>
-
         <main className="panel-main">
           <SQLEditor value={sql} onChange={setSql} onInsert={handleInsertRef} />
-          <div className="results-area">
-            {lastError && <div className="error-box" dangerouslySetInnerHTML={{ __html: lastError }} />}
-            {lastResult && !lastError && (
-              <ResultTable columns={lastResult.columns} values={lastResult.values} timeMs={lastTimeMs} />
-            )}
-            {!lastResult && !lastError && (
-              <div className="results-placeholder">
-                Escreve uma query e prime <kbd>Ctrl+Enter</kbd> para executar.
-              </div>
-            )}
-          </div>
+          {resultPanel}
         </main>
-
         <aside className="panel-right">
           {mode === 'career' && <CareerPanel sql={sql} />}
           {mode === 'free' && (
             <div className="free-panel">
               <div className="free-title">🔬 Free SQL</div>
-              <p className="free-desc">Escreve qualquer query. Usa o schema à esquerda como guia.</p>
+              <p className="free-desc">Escreve qualquer query. Clica nas células para filtrar, nos headers para ordenar.</p>
               <button className="btn-lesson" onClick={() => setLessonOpen(true)}>📚 Abrir lições</button>
             </div>
           )}
