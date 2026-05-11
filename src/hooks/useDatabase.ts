@@ -1,12 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { initSQL, loadDataset, getDBSchema } from '../engine/db';
 import { runSQL } from '../engine/query';
 import { useAppStore } from '../store/appStore';
 import { useDBStore } from '../store/dbStore';
 
 export function useDatabase(): { loading: boolean; error: string | null } {
-  const loadingRef = useRef(true);
-  const errorRef = useRef<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const initialized = useRef(false);
 
   const curDataset = useAppStore((s) => s.curDataset);
@@ -33,7 +33,6 @@ export function useDatabase(): { loading: boolean; error: string | null } {
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
-
     (async () => {
       try {
         await initSQL();
@@ -42,9 +41,9 @@ export function useDatabase(): { loading: boolean; error: string | null } {
         setDbReady(true);
         runInitialQuery();
       } catch (e: unknown) {
-        errorRef.current = (e as Error).message;
+        setError((e as Error).message);
       } finally {
-        loadingRef.current = false;
+        setLoading(false);
       }
     })();
   }, []);
@@ -57,10 +56,10 @@ export function useDatabase(): { loading: boolean; error: string | null } {
         setSchema(getDBSchema());
         runInitialQuery();
       } catch (e: unknown) {
-        errorRef.current = (e as Error).message;
+        setError((e as Error).message);
       }
     })();
   }, [curDataset]);
 
-  return { loading: loadingRef.current, error: errorRef.current };
+  return { loading, error };
 }
