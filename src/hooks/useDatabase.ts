@@ -20,7 +20,6 @@ export function useDatabase(): { loading: boolean; error: string | null } {
       setResult({ columns: res.columns, values: res.values }, res.timeMs);
     } catch (_) {
       try {
-        // fallback para primeiro dataset disponível
         const schema = getDBSchema();
         const firstTable = Object.keys(schema)[0];
         if (firstTable) {
