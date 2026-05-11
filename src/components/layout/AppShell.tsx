@@ -27,27 +27,20 @@ export function AppShell() {
     editorInsertRef.current?.insert(col);
   };
 
-  // Clicar numa célula → adiciona WHERE coluna = 'valor' ao editor
   const handleCellClick = (col: string, val: unknown) => {
     const isNum = typeof val === 'number' || !isNaN(Number(val));
-    const clause = isNum
-      ? ` WHERE ${col} = ${val}`
-      : ` WHERE ${col} = '${val}'`;
-
+    const clause = isNum ? ` WHERE ${col} = ${val}` : ` WHERE ${col} = '${val}'`;
     setSql((prev) => {
       const base = prev.trim().replace(/;$/, '');
-      // Se já tem WHERE, usa AND em vez de WHERE
       if (/\bWHERE\b/i.test(base)) {
         return base + ` AND ${col} = ${isNum ? val : `'${val}'`};`;
       }
-      // Remove ORDER BY antes de adicionar WHERE
       const withoutOrder = base.replace(/\s+ORDER BY.*/i, '');
       const orderMatch = base.match(/(\s+ORDER BY.*)/i);
       return withoutOrder + clause + (orderMatch ? orderMatch[1] : '') + ';';
     });
   };
 
-  // Clicar no header → ORDER BY coluna
   const handleHeaderClick = (col: string) => {
     setSql((prev) => {
       const base = prev.trim().replace(/;$/, '');
